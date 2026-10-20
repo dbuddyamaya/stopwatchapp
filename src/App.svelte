@@ -11,7 +11,8 @@
     ],
     running: null, // index of the team whose clock is running, or null
     startedAt: null, // Date.now() when the running clock last started
-    overallStart: null // when the first team watch was started; runs until Reset
+    overallStart: null, // when the first team watch was started
+    overallEnd: null // when "Stop exercise" was pressed; null while it's going
   });
 
   function load() {
@@ -30,7 +31,8 @@
             teams: saved.teams,
             running: saved.running ?? null,
             startedAt: saved.startedAt ?? null,
-            overallStart
+            overallStart,
+            overallEnd: saved.overallEnd ?? null
           };
         }
       }
@@ -68,7 +70,10 @@
   );
   // Overall timer: everything since the first watch started. Whatever isn't
   // either team's time is time the ball was in dispute.
-  let overall = $derived(state.overallStart ? Math.max(0, now - state.overallStart) : 0);
+  let stopped = $derived(state.overallEnd !== null);
+  let overall = $derived(
+    state.overallStart ? Math.max(0, (state.overallEnd ?? now) - state.overallStart) : 0
+  );
   let disputed = $derived(Math.max(0, overall - total));
   let share = $derived(
     overall > 0
@@ -89,6 +94,7 @@
   // Tap a team: if it's running, pause it. Otherwise pause whoever is running
   // and start this team. Both clocks can be paused (ball being contested).
   function toggle(i) {
+    if (stopped) return; // exercise is over until Reset
     if (state.running === i) {
       stopRunning();
     } else {
@@ -99,6 +105,15 @@
       now = state.startedAt;
     }
     if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  // Stop exercise: every clock stops and the final numbers stay on screen.
+  function stopExercise() {
+    if (!state.overallStart || stopped) return;
+    if (!confirm('Stop the exercise? The final times stay on screen until you reset.')) return;
+    stopRunning();
+    state.overallEnd = Date.now();
+    now = state.overallEnd;
   }
 
   function reset() {
@@ -162,16 +177,18 @@
   });
 </script>
 
-<main>
+<main class:stopped>
   <header>
     <div class="overall-row">
       <span class="overall">
         <span class="overall-label">Overall</span>
         <span class="overall-time">{format(overall)}</span>
       </span>
-      <span class="status" class:dispute={state.overallStart && state.running === null}>
+      <span class="status" class:dispute={state.overallStart && !stopped && state.running === null}>
         {#if !state.overallStart}
           Starts with the first watch
+        {:else if stopped}
+          Exercise stopped
         {:else if state.running === null}
           Ball in dispute
         {:else}
@@ -220,15 +237,17 @@
         <!-- Second tap target so the text area also toggles; the dial button is the accessible one. -->
         <button class="info" onclick={() => toggle(i)} tabindex="-1" aria-hidden="true">
           <span class="pct">{pct[i].toFixed(1)}% of possession</span>
-          <span class="action">{state.running === i ? 'Tap to pause' : 'Tap to start'}</span>
+          <span class="action">
+            {stopped ? 'Final' : state.running === i ? 'Tap to pause' : 'Tap to start'}
+          </span>
         </button>
       </div>
     {/each}
   </section>
 
   <footer>
-    <button class="secondary" onclick={stopRunning} disabled={state.running === null}>
-      Pause both
+    <button class="secondary" onclick={stopExercise} disabled={!state.overallStart || stopped}>
+      Stop exercise
     </button>
     <button class="secondary" onclick={reset}>Reset</button>
   </footer>
@@ -405,6 +424,10 @@
     align-items: center;
     gap: 4px;
     padding: 0 8px 12px;
+  }
+  .stopped .clock,
+  .stopped .info {
+    cursor: default;
   }
   .clock:focus,
   .info:focus {
