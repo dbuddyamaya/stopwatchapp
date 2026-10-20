@@ -10,7 +10,8 @@
       { name: 'Team 2', color: '#eb5757', accumulated: 0 }
     ],
     running: null, // index of the team whose clock is running, or null
-    startedAt: null // Date.now() when the running clock last started
+    startedAt: null, // Date.now() when the running clock last started
+    overallStart: null // when the first team watch was started; runs until Reset
   });
 
   function load() {
@@ -19,10 +20,17 @@
       if (raw) {
         const saved = JSON.parse(raw);
         if (Array.isArray(saved.teams) && saved.teams.length === 2) {
+          let overallStart = saved.overallStart ?? null;
+          // Older saves had no overall timer: start it so far no time counts as disputed.
+          const tracked = saved.teams[0].accumulated + saved.teams[1].accumulated;
+          if (overallStart === null && (tracked > 0 || saved.running !== null)) {
+            overallStart = (saved.running !== null ? saved.startedAt : Date.now()) - tracked;
+          }
           return {
             teams: saved.teams,
             running: saved.running ?? null,
-            startedAt: saved.startedAt ?? null
+            startedAt: saved.startedAt ?? null,
+            overallStart
           };
         }
       }
@@ -54,8 +62,18 @@
 
   let times = $derived([elapsed(0), elapsed(1)]);
   let total = $derived(times[0] + times[1]);
+  // Possession split between the two teams (shown on each card)
   let pct = $derived(
     total > 0 ? [(times[0] / total) * 100, (times[1] / total) * 100] : [50, 50]
+  );
+  // Overall timer: everything since the first watch started. Whatever isn't
+  // either team's time is time the ball was in dispute.
+  let overall = $derived(state.overallStart ? Math.max(0, now - state.overallStart) : 0);
+  let disputed = $derived(Math.max(0, overall - total));
+  let share = $derived(
+    overall > 0
+      ? [(times[0] / overall) * 100, (disputed / overall) * 100, (times[1] / overall) * 100]
+      : [0, 0, 0]
   );
 
   function stopRunning() {
@@ -77,6 +95,7 @@
       stopRunning();
       state.running = i;
       state.startedAt = Date.now();
+      if (!state.overallStart) state.overallStart = state.startedAt;
       now = state.startedAt;
     }
     if (navigator.vibrate) navigator.vibrate(30);
@@ -145,20 +164,32 @@
 
 <main>
   <header>
-    <div class="bar" aria-label="Possession share">
-      <div class="seg" style="width:{pct[0]}%; background:{state.teams[0].color}"></div>
-      <div class="seg" style="width:{pct[1]}%; background:{state.teams[1].color}"></div>
-    </div>
-    <div class="bar-labels">
-      <span>{pct[0].toFixed(0)}%</span>
-      <span class="status">
-        {#if state.running === null}
-          Both paused
+    <div class="overall-row">
+      <span class="overall">
+        <span class="overall-label">Overall</span>
+        <span class="overall-time">{format(overall)}</span>
+      </span>
+      <span class="status" class:dispute={state.overallStart && state.running === null}>
+        {#if !state.overallStart}
+          Starts with the first watch
+        {:else if state.running === null}
+          Ball in dispute
         {:else}
           {state.teams[state.running].name} in possession
         {/if}
       </span>
-      <span>{pct[1].toFixed(0)}%</span>
+    </div>
+    <div class="bar" aria-label="Share of overall time">
+      <div class="seg" style="width:{share[0]}%; background:{state.teams[0].color}"></div>
+      <div class="seg" style="width:{share[1]}%; background:var(--dispute, #8b95a1)"></div>
+      <div class="seg" style="width:{share[2]}%; background:{state.teams[1].color}"></div>
+    </div>
+    <div class="bar-labels">
+      <span>{share[0].toFixed(0)}%</span>
+      <span class="dispute-label">
+        <span class="dot"></span>In dispute {format(disputed)} · {share[1].toFixed(0)}%
+      </span>
+      <span>{share[2].toFixed(0)}%</span>
     </div>
   </header>
 
@@ -199,7 +230,6 @@
     <button class="secondary" onclick={stopRunning} disabled={state.running === null}>
       Pause both
     </button>
-    <span class="total">Tracked: {format(total)}</span>
     <button class="secondary" onclick={reset}>Reset</button>
   </footer>
 </main>
@@ -237,8 +267,53 @@
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
+  .overall-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .overall {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .overall-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .overall-time {
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
   .status {
-    text-align: center;
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status.dispute {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .dispute-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dispute, #8b95a1);
   }
 
   .teams {
@@ -331,6 +406,15 @@
     gap: 4px;
     padding: 0 8px 12px;
   }
+  .clock:focus,
+  .info:focus {
+    outline: none;
+  }
+  .clock:focus-visible {
+    outline: 3px solid var(--team);
+    outline-offset: -3px;
+    border-radius: 12px;
+  }
   .clock:active .dial {
     transform: scale(0.98);
   }
@@ -388,12 +472,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-  }
-  .total {
-    font-size: 0.85rem;
-    text-align: center;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
   }
   .secondary {
     background: var(--surface);
