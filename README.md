@@ -1,6 +1,13 @@
 # Possession Clock
 
-Two possession stopwatches, one per team. Tap a team's clock to start it (this pauses the other team). Tap the running clock to pause it, for example when the ball is turned over but the other team doesn't have control yet. Times survive a page refresh or a locked phone.
+Possession stopwatches for a training exercise: one analog watch per team plus an overall exercise watch.
+
+- The exercise watch starts the first time you tap either team's watch.
+- Tap a team's watch when they have control of the ball. This pauses the other team.
+- Tap the running watch when the ball is lost. That time counts as "in dispute" until a team has control again.
+- **End exercise** stops every watch and keeps the final numbers on screen. **New exercise** clears them.
+- The overview shows each team's time, disputed time, and each one's share of the whole exercise.
+- Times survive a page refresh or a locked phone.
 
 ## Run locally
 

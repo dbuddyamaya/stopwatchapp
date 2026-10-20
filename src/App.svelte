@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import Dial from './Dial.svelte';
 
   const STORAGE_KEY = 'possession-clock-v1';
 
@@ -17,7 +18,13 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
-        if (Array.isArray(saved.teams) && saved.teams.length === 2) return saved;
+        if (Array.isArray(saved.teams) && saved.teams.length === 2) {
+          return {
+            teams: saved.teams,
+            running: saved.running ?? null,
+            startedAt: saved.startedAt ?? null
+          };
+        }
       }
     } catch {
       // storage unavailable or corrupt: start fresh
@@ -175,7 +182,9 @@
         </div>
 
         <button class="clock" onclick={() => toggle(i)}>
-          <span class="time">{format(times[i])}</span>
+          <span class="dial">
+            <Dial ms={times[i]} color={team.color} running={state.running === i} label={team.name} />
+          </span>
           <span class="pct">{pct[i].toFixed(1)}% of possession</span>
           <span class="action">{state.running === i ? 'Tap to pause' : 'Tap to start'}</span>
         </button>
@@ -229,16 +238,17 @@
   .teams {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
   @media (min-width: 720px) {
     .teams {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   .team {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background: var(--surface);
@@ -287,7 +297,6 @@
 
   .clock {
     flex: 1;
-    min-height: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -296,28 +305,32 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    padding: 20px;
+    padding: 16px;
     touch-action: manipulation;
     user-select: none;
   }
   .team.running .clock {
-    background: color-mix(in srgb, var(--team) 18%, transparent);
+    background: color-mix(in srgb, var(--team) 14%, transparent);
   }
-  .clock:active {
-    filter: brightness(1.2);
+  .clock:active .dial {
+    transform: scale(0.98);
   }
-  .time {
-    font-size: clamp(3rem, 14vw, 6rem);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
+  .dial {
+    display: block;
+    width: min(100%, 340px, 30vh);
+    min-width: 200px;
+    transition: transform 0.08s;
+  }
+  @media (min-width: 720px) {
+    .dial {
+      width: min(100%, 460px, 58vh);
+    }
   }
   .pct {
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
   .action {
-    margin-top: 6px;
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
