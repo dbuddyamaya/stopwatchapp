@@ -9,6 +9,7 @@
     message,
     confirmLabel,
     confirmColor = 'primary',
+    confirmClass = '',
     onconfirm
   } = $props();
 
@@ -18,12 +19,20 @@
   }
 </script>
 
-<Modal bind:open size="xs" {title} autoclose={false}>
-  <p class="text-base text-gray-400">{message}</p>
+<Modal
+  bind:open
+  {title}
+  size="none"
+  class="w-[calc(100%-2rem)] max-w-xs"
+  classes={{ header: 'p-3 md:p-4 text-base', body: 'p-3 md:p-4', footer: 'p-3 md:p-4' }}
+>
+  <p class="text-sm text-gray-400">{message}</p>
   {#snippet footer()}
     <div class="flex w-full justify-end gap-2">
-      <Button color="alternative" onclick={() => (open = false)}>Cancel</Button>
-      <Button color={confirmColor} onclick={confirm}>{confirmLabel}</Button>
+      <Button size="sm" color="alternative" onclick={() => (open = false)}>Cancel</Button>
+      <Button size="sm" color={confirmColor} class={confirmClass} onclick={confirm}>
+        {confirmLabel}
+      </Button>
     </div>
   {/snippet}
 </Modal>

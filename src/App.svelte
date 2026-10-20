@@ -9,6 +9,10 @@
   const game = useGame();
   let confirmStop = $state(false);
   let confirmReset = $state(false);
+
+  // A deeper red than Flowbite's default for the Stop exercise buttons
+  const darkRed =
+    'bg-red-800 hover:bg-red-900 dark:bg-red-800 dark:hover:bg-red-900 disabled:opacity-35';
 </script>
 
 <main>
@@ -36,10 +40,10 @@
   </section>
 
   <footer class="flex justify-between gap-2">
-    <Button color="red" disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
+    <Button color="red" class={darkRed} disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
       Stop exercise
     </Button>
-    <Button color="alternative" disabled={!game.started} onclick={() => (confirmReset = true)}>
+    <Button color="light" class="disabled:opacity-35" disabled={!game.started} onclick={() => (confirmReset = true)}>
       Reset
     </Button>
   </footer>
@@ -51,6 +55,7 @@
   message="Every watch stops. The final times stay on screen until you reset."
   confirmLabel="Stop exercise"
   confirmColor="red"
+  confirmClass={darkRed}
   onconfirm={() => game.stopExercise()}
 />
 <ConfirmDialog
