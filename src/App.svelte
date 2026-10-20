@@ -181,10 +181,13 @@
           />
         </div>
 
-        <button class="clock" onclick={() => toggle(i)}>
+        <button class="clock" onclick={() => toggle(i)} aria-pressed={state.running === i}>
           <span class="dial">
             <Dial ms={times[i]} color={team.color} running={state.running === i} label={team.name} />
           </span>
+        </button>
+        <!-- Second tap target so the text area also toggles; the dial button is the accessible one. -->
+        <button class="info" onclick={() => toggle(i)} tabindex="-1" aria-hidden="true">
           <span class="pct">{pct[i].toFixed(1)}% of possession</span>
           <span class="action">{state.running === i ? 'Tap to pause' : 'Tap to start'}</span>
         </button>
@@ -202,13 +205,16 @@
 </main>
 
 <style>
+  /* The whole app fits one screen: the watches shrink to the space left. */
   main {
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    gap: 10px;
+    padding: 10px 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
     max-width: 1100px;
     margin: 0 auto;
   }
@@ -237,41 +243,46 @@
 
   .teams {
     flex: 1;
+    min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-  @media (min-width: 720px) {
-    .teams {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    gap: 10px;
   }
 
+  /* Each card is a size container so the watch can fill whatever space is left. */
   .team {
     min-width: 0;
-    display: flex;
-    flex-direction: column;
+    min-height: 0;
+    container-type: size;
+    display: grid;
+    grid-template-areas: 'head' 'dial' 'info';
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
     background: var(--surface);
     border: 2px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
   }
   .team.running {
     border-color: var(--team);
+    background: color-mix(in srgb, var(--team) 14%, var(--surface));
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--team) 25%, transparent);
   }
 
   .team-head {
+    grid-area: head;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
+    gap: 8px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border);
+    min-width: 0;
   }
   .color {
-    width: 34px;
-    height: 34px;
+    width: 26px;
+    height: 26px;
     padding: 0;
     border: none;
     border-radius: 8px;
@@ -285,8 +296,8 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 1.2rem;
+    padding: 4px 6px;
+    font-size: 1.05rem;
     font-weight: 600;
   }
   .name:hover,
@@ -295,56 +306,92 @@
     outline: none;
   }
 
-  .clock {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+  .clock,
+  .info {
     border: none;
     background: transparent;
     cursor: pointer;
-    padding: 16px;
     touch-action: manipulation;
     user-select: none;
+    min-height: 0;
+    min-width: 0;
   }
-  .team.running .clock {
-    background: color-mix(in srgb, var(--team) 14%, transparent);
+  .clock {
+    grid-area: dial;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+  .info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 12px;
   }
   .clock:active .dial {
     transform: scale(0.98);
   }
   .dial {
     display: block;
-    width: min(100%, 340px, 30vh);
-    min-width: 200px;
+    width: min(100cqw - 20px, 100cqh - 115px, 460px);
     transition: transform 0.08s;
   }
-  @media (min-width: 720px) {
-    .dial {
-      width: min(100%, 460px, 58vh);
-    }
-  }
   .pct {
+    font-size: 0.85rem;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
   .action {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--team);
+  }
+
+  /* Phones in portrait: teams stacked, each card with the watch on the left. */
+  @media (max-width: 719px) and (orientation: portrait) {
+    .teams {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+  }
+  /* Phones (portrait or landscape): watch on the left, name and text on the right. */
+  @media (max-width: 719px) and (orientation: portrait), (max-height: 500px) {
+    .team {
+      grid-template-areas: 'dial head' 'dial info';
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .team-head {
+      border-bottom: none;
+      padding: 10px 10px 0 4px;
+    }
+    .info {
+      align-items: flex-start;
+      justify-content: center;
+      text-align: left;
+      padding: 0 10px 0 10px;
+    }
+    .clock {
+      padding: 8px 4px 8px 8px;
+    }
+    .dial {
+      width: min(100cqh - 16px, 60cqw);
+    }
   }
 
   footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 8px;
   }
   .total {
+    font-size: 0.85rem;
+    text-align: center;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -352,11 +399,27 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 10px 18px;
+    padding: 9px 14px;
+    white-space: nowrap;
     cursor: pointer;
   }
   .secondary:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+  @media (min-width: 720px) {
+    main {
+      gap: 16px;
+      padding: 16px;
+    }
+    .teams {
+      gap: 16px;
+    }
+    .name {
+      font-size: 1.2rem;
+    }
+    .pct {
+      font-size: 1rem;
+    }
   }
 </style>

@@ -45,7 +45,7 @@
   {/each}
 
   {#each numbers as n}
-    {@const [x, y] = polar(100, n * 6)}
+    {@const [x, y] = polar(98, n * 6)}
     <text {x} {y} class="num" text-anchor="middle" dominant-baseline="central">{n}</text>
   {/each}
 
@@ -69,12 +69,12 @@
   }
   .num {
     fill: #ffffff;
-    font-size: 19px;
+    font-size: 22px;
     font-weight: 400;
   }
   .digital {
     fill: #ffffff;
-    font-size: 21px;
+    font-size: 25px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
   }
