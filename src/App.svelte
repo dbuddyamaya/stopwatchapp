@@ -21,6 +21,10 @@
     overall={game.overall}
     disputed={game.disputed}
     share={game.share}
+    inPlay={game.inPlay}
+    outOfPlay={game.outOfPlay}
+    playShare={game.playShare}
+    bind:gameMode={game.state.gameMode}
     status={game.status}
     statusColor={game.statusColor}
   />
@@ -34,7 +38,11 @@
         pct={game.pct[i]}
         running={game.state.running === i}
         stopped={game.stopped}
+        gameMode={game.state.gameMode}
+        canScore={game.started && !game.stopped}
         ontoggle={() => game.toggle(i)}
+        ongoal={() => game.goal(i)}
+        onundogoal={() => game.undoGoal(i)}
       />
     {/each}
   </section>
@@ -42,6 +50,15 @@
   <footer class="flex justify-between gap-2">
     <Button color="red" class={darkRed} disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
       Stop exercise
+    </Button>
+    <Button
+      color={game.isOut ? 'green' : 'blue'}
+      class="flex-1 disabled:opacity-35"
+      disabled={!game.started || game.stopped}
+      onclick={() => game.outOfBounds()}
+      aria-pressed={game.isOut}
+    >
+      {game.isOut ? 'Ball in play' : 'Out of bounds'}
     </Button>
     <Button color="light" class="disabled:opacity-35" disabled={!game.started} onclick={() => (confirmReset = true)}>
       Reset
@@ -61,7 +78,7 @@
 <ConfirmDialog
   bind:open={confirmReset}
   title="Reset both clocks?"
-  message="All times go back to 0:00. Team names and colors are kept."
+  message="All times and scores go back to 0. Team names and colors are kept."
   confirmLabel="Reset"
   onconfirm={() => game.reset()}
 />

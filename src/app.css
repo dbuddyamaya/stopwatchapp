@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @plugin 'flowbite/plugin';
 /* Only scan the Flowbite components the app uses, to keep the CSS small. */
-@source '../node_modules/flowbite-svelte/dist/{buttons,badge,modal,dialog,forms/input-field,utils}';
+@source '../node_modules/flowbite-svelte/dist/{buttons,badge,modal,dialog,forms/input-field,forms/toggle,forms/label,utils}';
 
 /* Flowbite's dark: styles follow the "dark" class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -29,6 +29,8 @@
   --border: #2c333d;
   --face: #000000;
   --dispute: #6b7480;
+  --in-play: #cfd6df;
+  --out-of-play: #3a424d;
   color-scheme: dark;
 }
 

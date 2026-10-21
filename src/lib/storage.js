@@ -5,13 +5,18 @@ const STORAGE_KEY = 'possession-clock-v1';
 
 export const defaults = () => ({
   teams: [
-    { name: 'Team 1', color: '#2f80ed', accumulated: 0 },
-    { name: 'Team 2', color: '#eb5757', accumulated: 0 }
+    { name: 'Team 1', color: '#2f80ed', accumulated: 0, score: 0 },
+    { name: 'Team 2', color: '#eb5757', accumulated: 0, score: 0 }
   ],
   running: null, // index of the team whose watch is running, or null
   startedAt: null, // when the running watch last started
   overallStart: null, // when the first team watch was started
-  overallEnd: null // when "Stop exercise" was pressed; null while it's going
+  overallEnd: null, // when "Stop exercise" was pressed; null while it's going
+  outSince: null, // when the ball went out of play; null while it's in play
+  outAccumulated: 0, // finished out-of-play time
+  outReason: null, // 'out' (Out of bounds) or 'goal'
+  lastScorer: null, // index of the team that scored last
+  gameMode: false // show scores and Goal buttons
 });
 
 export function load() {
@@ -29,11 +34,16 @@ export function load() {
     }
 
     return {
-      teams: saved.teams,
+      teams: saved.teams.map((team) => ({ ...team, score: team.score ?? 0 })),
       running: saved.running ?? null,
       startedAt: saved.startedAt ?? null,
       overallStart,
-      overallEnd: saved.overallEnd ?? null
+      overallEnd: saved.overallEnd ?? null,
+      outSince: saved.outSince ?? null,
+      outAccumulated: saved.outAccumulated ?? 0,
+      outReason: saved.outReason ?? null,
+      lastScorer: saved.lastScorer ?? null,
+      gameMode: saved.gameMode ?? false
     };
   } catch {
     return defaults(); // storage unavailable or corrupt
