@@ -37,7 +37,7 @@
 
   {#if gameMode}
     <div class="goals">
-      <button class="goal" onclick={ongoal} disabled={!canScore}>Goal +1</button>
+      <button class="goal" onclick={ongoal} disabled={!canScore}>Goal</button>
       <button
         class="undo"
         onclick={onundogoal}
@@ -111,6 +111,7 @@
 
   .goals {
     grid-area: goals;
+    min-width: 0;
     display: flex;
     gap: 8px;
     padding: 8px 10px 0;
@@ -131,6 +132,9 @@
   }
   .goal {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     background: var(--team);
     color: #fff;
     text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
@@ -139,6 +143,7 @@
     transform: scale(0.97);
   }
   .undo {
+    flex-shrink: 0;
     background: transparent;
     border: 1px solid var(--border);
     color: var(--muted);
@@ -214,7 +219,11 @@
       grid-template-rows: auto auto minmax(0, 1fr);
     }
     .goals {
+      gap: 6px;
       padding: 8px 10px 0 4px;
+    }
+    .goals button {
+      padding: 8px 10px;
     }
     .head {
       border-bottom: none;

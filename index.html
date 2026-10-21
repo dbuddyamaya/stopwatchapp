@@ -10,6 +10,19 @@
     <meta name="apple-mobile-web-app-title" content="Possession" />
     <title>Possession Clock</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      // Apply the saved theme (or the phone's setting) before the page draws.
+      try {
+        var t = localStorage.getItem('possession-clock-theme');
+        if (t !== 'light' && t !== 'dark')
+          t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        if (t === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#eef1f5');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

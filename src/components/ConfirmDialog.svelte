@@ -26,7 +26,7 @@
   class="w-[calc(100%-2rem)] max-w-xs"
   classes={{ header: 'p-3 md:p-4 text-base', body: 'p-3 md:p-4', footer: 'p-3 md:p-4' }}
 >
-  <p class="text-sm text-gray-400">{message}</p>
+  <p class="text-sm text-(--muted)">{message}</p>
   {#snippet footer()}
     <div class="flex w-full justify-end gap-2">
       <Button size="sm" color="alternative" onclick={() => (open = false)}>Cancel</Button>

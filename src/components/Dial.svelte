@@ -18,7 +18,7 @@
 </script>
 
 <svg viewBox="0 0 300 300" role="img" aria-label="{label} {formatDial(ms)}">
-  <circle cx={C} cy={C} r="148" fill="var(--face)" />
+  <circle cx={C} cy={C} r="148" class="face" />
   {#if running}
     <circle cx={C} cy={C} r="145" fill="none" stroke={color} stroke-width="3" opacity="0.9" />
   {/if}
@@ -32,7 +32,7 @@
       {y1}
       {x2}
       {y2}
-      stroke={major ? '#ffffff' : '#6b7280'}
+      class={major ? 'tick major' : 'tick'}
       stroke-width={major ? 3 : 1.6}
       stroke-linecap="round"
     />
@@ -52,7 +52,7 @@
     <line x1={C} y1={C + 20} x2={C} y2="18" stroke={color} stroke-width="2.6" stroke-linecap="round" />
   </g>
   <circle cx={C} cy={C} r="5" fill={color} />
-  <circle cx={C} cy={C} r="2" fill="var(--face)" />
+  <circle cx={C} cy={C} r="2" class="face" />
 </svg>
 
 <style>
@@ -61,19 +61,30 @@
     height: auto;
     display: block;
   }
+  .face {
+    fill: var(--face);
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+  .tick {
+    stroke: var(--face-minor);
+  }
+  .tick.major {
+    stroke: var(--face-ink);
+  }
   .num {
-    fill: #ffffff;
+    fill: var(--face-ink);
     font-size: 22px;
     font-weight: 400;
   }
   .digital {
-    fill: #ffffff;
+    fill: var(--face-ink);
     font-size: 25px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
   }
   .mins {
-    fill: #9aa3ad;
+    fill: var(--face-muted);
     font-size: 13px;
   }
 </style>

@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @plugin 'flowbite/plugin';
 /* Only scan the Flowbite components the app uses, to keep the CSS small. */
-@source '../node_modules/flowbite-svelte/dist/{buttons,badge,modal,dialog,forms/input-field,forms/toggle,forms/label,utils}';
+@source '../node_modules/flowbite-svelte/dist/{buttons,modal,dialog,forms/input-field,forms/toggle,forms/label,utils}';
 
 /* Flowbite's dark: styles follow the "dark" class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -20,18 +20,40 @@
   --color-primary-900: #1e3a8a;
 }
 
-/* App colors (dark theme), used by the watch and the cards */
-:root {
+/* App colors. Dark theme when <html> has the "dark" class (see lib/theme.svelte.js). */
+:root.dark {
   --bg: #111418;
   --surface: #1b2027;
   --text: #f2f4f7;
   --muted: #9aa4b2;
   --border: #2c333d;
+  --track: #1f2937;
   --face: #000000;
+  --face-ink: #ffffff;
+  --face-minor: #6b7280;
+  --face-muted: #9aa3ad;
   --dispute: #6b7480;
   --in-play: #cfd6df;
   --out-of-play: #3a424d;
   color-scheme: dark;
+}
+
+/* Light theme: high contrast for reading in sunlight. */
+:root:not(.dark) {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --text: #0b0f14;
+  --muted: #3f4855;
+  --border: #c3cad4;
+  --track: #dde2e8;
+  --face: #ffffff;
+  --face-ink: #000000;
+  --face-minor: #6b7280;
+  --face-muted: #3f4855;
+  --dispute: #7c8592;
+  --in-play: #1f2937;
+  --out-of-play: #b8c0cb;
+  color-scheme: light;
 }
 
 html,

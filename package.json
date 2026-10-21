@@ -15,6 +15,7 @@
     "flowbite-svelte": "^1.33.1",
     "svelte": "^5.57.2",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0"
   }
 }

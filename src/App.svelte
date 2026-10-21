@@ -13,6 +13,8 @@
   // A deeper red than Flowbite's default for the Stop exercise buttons
   const darkRed =
     'bg-red-800 hover:bg-red-900 dark:bg-red-800 dark:hover:bg-red-900 disabled:opacity-35';
+  // Keeps the three footer buttons on one line on narrow phones
+  const tight = 'whitespace-nowrap px-3 sm:px-5';
 </script>
 
 <main>
@@ -25,8 +27,6 @@
     outOfPlay={game.outOfPlay}
     playShare={game.playShare}
     bind:gameMode={game.state.gameMode}
-    status={game.status}
-    statusColor={game.statusColor}
   />
 
   <section class="teams">
@@ -48,19 +48,19 @@
   </section>
 
   <footer class="flex justify-between gap-2">
-    <Button color="red" class={darkRed} disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
+    <Button color="red" class="{darkRed} {tight}" disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
       Stop exercise
     </Button>
     <Button
       color={game.isOut ? 'green' : 'blue'}
-      class="flex-1 disabled:opacity-35"
+      class="flex-1 disabled:opacity-35 {tight}"
       disabled={!game.started || game.stopped}
       onclick={() => game.outOfBounds()}
       aria-pressed={game.isOut}
     >
       {game.isOut ? 'Ball in play' : 'Out of bounds'}
     </Button>
-    <Button color="light" class="disabled:opacity-35" disabled={!game.started} onclick={() => (confirmReset = true)}>
+    <Button color="light" class="disabled:opacity-35 {tight}" disabled={!game.started} onclick={() => (confirmReset = true)}>
       Reset
     </Button>
   </footer>

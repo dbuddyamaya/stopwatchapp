@@ -68,31 +68,6 @@ class Game {
     this.started && !this.stopped && !this.isOut && this.state.running === null
   );
 
-  status = $derived(
-    !this.started
-      ? 'Starts with the first watch'
-      : this.stopped
-        ? 'Exercise stopped'
-        : this.isOut
-          ? this.state.outReason === 'goal' && this.state.lastScorer !== null
-            ? `Goal: ${this.state.teams[this.state.lastScorer].name}`
-            : 'Out of play'
-          : this.state.running === null
-            ? 'Ball in dispute'
-            : `${this.state.teams[this.state.running].name} in possession`
-  );
-
-  /** Badge color: green in possession, amber in dispute, blue out of play, gray otherwise. */
-  statusColor = $derived(
-    !this.started || this.stopped
-      ? 'gray'
-      : this.isOut
-        ? 'blue'
-        : this.state.running === null
-          ? 'amber'
-          : 'green'
-  );
-
   #pauseRunning(t) {
     const s = this.state;
     if (s.running === null) return;
