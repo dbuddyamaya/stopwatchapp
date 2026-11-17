@@ -5,8 +5,8 @@ const STORAGE_KEY = 'possession-clock-v1';
 
 export const defaults = () => ({
   teams: [
-    { name: 'Team 1', color: '#2f80ed', accumulated: 0, score: 0 },
-    { name: 'Team 2', color: '#eb5757', accumulated: 0, score: 0 }
+    { accumulated: 0, score: 0 }, // team names and colors are in teams.svelte.js
+    { accumulated: 0, score: 0 }
   ],
   running: null, // index of the team whose watch is running, or null
   startedAt: null, // when the running watch last started
@@ -34,7 +34,7 @@ export function load() {
     }
 
     return {
-      teams: saved.teams.map((team) => ({ ...team, score: team.score ?? 0 })),
+      teams: saved.teams.map((team) => ({ accumulated: team.accumulated ?? 0, score: team.score ?? 0 })),
       running: saved.running ?? null,
       startedAt: saved.startedAt ?? null,
       overallStart,

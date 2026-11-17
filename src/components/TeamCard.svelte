@@ -3,9 +3,11 @@
   // and (in game mode) the Goal button.
   import Input from 'flowbite-svelte/Input.svelte';
   import Dial from './Dial.svelte';
+  import { inkOn } from '../lib/color.js';
 
   let {
     team = $bindable(),
+    score = 0,
     number,
     ms,
     pct,
@@ -21,7 +23,7 @@
   let action = $derived(stopped ? 'Final' : running ? 'Tap to pause' : 'Tap to start');
 </script>
 
-<div class="team" class:running class:stopped class:game={gameMode} style="--team:{team.color}">
+<div class="team" class:running class:stopped class:game={gameMode} style="--team:{team.color}; --ink:{inkOn(team.color)}">
   <div class="head">
     <input class="color" type="color" bind:value={team.color} aria-label="{team.name} color" />
     <div class="min-w-0 flex-1">
@@ -41,7 +43,7 @@
       <button
         class="undo"
         onclick={onundogoal}
-        disabled={team.score === 0}
+        disabled={score === 0}
         aria-label="Remove a goal from {team.name}"
         title="Remove a goal">−1</button
       >
@@ -136,8 +138,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     background: var(--team);
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+    color: var(--ink, #fff);
   }
   .goal:not(:disabled):active {
     transform: scale(0.97);

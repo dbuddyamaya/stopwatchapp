@@ -1,126 +1,96 @@
 <script>
-  // Page layout: overall bar on top, the two team cards, and the controls.
-  import Button from 'flowbite-svelte/Button.svelte';
+  // App shell: the slide-out tool menu and whichever tool is selected.
+  // Every tool keeps its state (and running clock) while another one is shown.
+  import { onMount } from 'svelte';
   import { useGame } from './lib/game.svelte.js';
-  import OverallBar from './components/OverallBar.svelte';
-  import TeamCard from './components/TeamCard.svelte';
-  import ConfirmDialog from './components/ConfirmDialog.svelte';
+  import { useScoreboard } from './lib/scoreboard.svelte.js';
+  import { useRotation } from './lib/rotation.svelte.js';
+  import { setWakeLock, resetWakeLock } from './lib/wakeLock.js';
+  import NavDrawer from './components/NavDrawer.svelte';
+  import PossessionView from './components/PossessionView.svelte';
+  import ScoreboardView from './components/ScoreboardView.svelte';
+  import RotationView from './components/RotationView.svelte';
+
+  const TOOL_KEY = 'possession-clock-tool';
+  const tools = [
+    {
+      id: 'possession',
+      name: 'Possession clock',
+      description: 'Time each team has the ball',
+      icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" /><path d="M12 13.5V9M10 2.5h4M18.5 6l1.5-1.5" /></svg>'
+    },
+    {
+      id: 'scoreboard',
+      name: 'Scoreboard',
+      description: 'Goals and a game clock with halves',
+      icon: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M12 5v14M7 10v4M15.5 10h2v4h-2z" /></svg>'
+    },
+    {
+      id: 'rotation',
+      name: 'Winner stays',
+      description: '3+ teams take turns, first goal wins',
+      icon: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7" /></svg>'
+    }
+  ];
 
   const game = useGame();
-  let confirmStop = $state(false);
-  let confirmReset = $state(false);
+  const board = useScoreboard();
+  const rotation = useRotation();
+  let menuOpen = $state(false);
 
-  // A deeper red than Flowbite's default for the Stop exercise buttons
-  const darkRed =
-    'bg-red-800 hover:bg-red-900 dark:bg-red-800 dark:hover:bg-red-900 disabled:opacity-35';
-  // Keeps the three footer buttons on one line on narrow phones
-  const tight = 'whitespace-nowrap px-3 sm:px-5';
+  let tool = $state(
+    (() => {
+      try {
+        const saved = localStorage.getItem(TOOL_KEY);
+        if (tools.some((t) => t.id === saved)) return saved;
+      } catch {
+        // storage unavailable
+      }
+      return 'possession';
+    })()
+  );
+
+  function select(id) {
+    tool = id;
+    try {
+      localStorage.setItem(TOOL_KEY, id);
+    } catch {
+      // storage unavailable
+    }
+  }
+
+  /** A dot in the menu for a tool whose clock is running in the background. */
+  let live = $derived({
+    possession: game.started && !game.stopped,
+    scoreboard: board.running,
+    rotation: rotation.running
+  });
+
+  // Keep the screen on while any tool's clock is running.
+  const keepAwake = () => live.possession || live.scoreboard || live.rotation;
+  $effect(() => {
+    setWakeLock(keepAwake());
+  });
+
+  onMount(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      game.now = Date.now();
+      board.tick();
+      rotation.tick();
+      resetWakeLock(keepAwake());
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  });
 </script>
 
-<main>
-  <OverallBar
-    teams={game.state.teams}
-    overall={game.overall}
-    disputed={game.disputed}
-    share={game.share}
-    inPlay={game.inPlay}
-    outOfPlay={game.outOfPlay}
-    playShare={game.playShare}
-    bind:gameMode={game.state.gameMode}
-  />
+{#if tool === 'scoreboard'}
+  <ScoreboardView {board} onmenu={() => (menuOpen = true)} />
+{:else if tool === 'rotation'}
+  <RotationView {rotation} onmenu={() => (menuOpen = true)} />
+{:else}
+  <PossessionView {game} onmenu={() => (menuOpen = true)} />
+{/if}
 
-  <section class="teams">
-    {#each game.state.teams as _, i}
-      <TeamCard
-        bind:team={game.state.teams[i]}
-        number={i + 1}
-        ms={game.times[i]}
-        pct={game.pct[i]}
-        running={game.state.running === i}
-        stopped={game.stopped}
-        gameMode={game.state.gameMode}
-        canScore={game.started && !game.stopped}
-        ontoggle={() => game.toggle(i)}
-        ongoal={() => game.goal(i)}
-        onundogoal={() => game.undoGoal(i)}
-      />
-    {/each}
-  </section>
-
-  <footer class="flex justify-between gap-2">
-    <Button color="red" class="{darkRed} {tight}" disabled={!game.started || game.stopped} onclick={() => (confirmStop = true)}>
-      Stop exercise
-    </Button>
-    <Button
-      color={game.isOut ? 'green' : 'blue'}
-      class="flex-1 disabled:opacity-35 {tight}"
-      disabled={!game.started || game.stopped}
-      onclick={() => game.outOfBounds()}
-      aria-pressed={game.isOut}
-    >
-      {game.isOut ? 'Ball in play' : 'Out of bounds'}
-    </Button>
-    <Button color="light" class="disabled:opacity-35 {tight}" disabled={!game.started} onclick={() => (confirmReset = true)}>
-      Reset
-    </Button>
-  </footer>
-</main>
-
-<ConfirmDialog
-  bind:open={confirmStop}
-  title="Stop the exercise?"
-  message="Every watch stops. The final times stay on screen until you reset."
-  confirmLabel="Stop exercise"
-  confirmColor="red"
-  confirmClass={darkRed}
-  onconfirm={() => game.stopExercise()}
-/>
-<ConfirmDialog
-  bind:open={confirmReset}
-  title="Reset both clocks?"
-  message="All times and scores go back to 0. Team names and colors are kept."
-  confirmLabel="Reset"
-  onconfirm={() => game.reset()}
-/>
-
-<style>
-  /* The whole app fits one screen: the watches shrink to the space left. */
-  main {
-    height: 100vh;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 12px;
-    padding-top: max(10px, env(safe-area-inset-top));
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  .teams {
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr);
-    gap: 10px;
-  }
-  /* Phones in portrait: teams stacked. */
-  @media (max-width: 719px) and (orientation: portrait) {
-    .teams {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 720px) {
-    main,
-    .teams {
-      gap: 16px;
-    }
-    main {
-      padding: 16px;
-    }
-  }
-</style>
+<NavDrawer bind:open={menuOpen} {tools} current={tool} onselect={select} {live} />

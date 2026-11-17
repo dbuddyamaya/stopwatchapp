@@ -8,7 +8,6 @@
 // "In play" time is possession + dispute.
 import { onMount } from 'svelte';
 import { defaults, load, save } from './storage.js';
-import { setWakeLock, resetWakeLock } from './wakeLock.js';
 
 class Game {
   state = $state(load());
@@ -146,29 +145,20 @@ class Game {
     this.now = t;
   }
 
-  /** Clear all times and scores, keeping team names, colors and game mode. */
+  /** Clear all times and scores, keeping game mode. (Team names and colors live in teams.svelte.js.) */
   reset() {
     const fresh = defaults();
-    fresh.teams.forEach((team, i) => {
-      team.name = this.state.teams[i].name;
-      team.color = this.state.teams[i].color;
-    });
     fresh.gameMode = this.state.gameMode;
     this.state = fresh;
     this.now = Date.now();
   }
 }
 
-/** Create the game and hook up saving, the frame ticker and the wake lock. Call from a component. */
+/** Create the game and hook up saving and the frame ticker. Call from a component. */
 export function useGame() {
   const game = new Game();
-  // The screen stays on for the whole exercise, stoppages included.
-  const keepAwake = () => game.started && !game.stopped;
 
   $effect(() => save(game.state));
-  $effect(() => {
-    setWakeLock(keepAwake());
-  });
 
   onMount(() => {
     let frame;
@@ -177,18 +167,7 @@ export function useGame() {
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return;
-      game.now = Date.now();
-      resetWakeLock(keepAwake());
-    };
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
+    return () => cancelAnimationFrame(frame);
   });
 
   return game;
