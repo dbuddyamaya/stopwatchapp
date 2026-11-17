@@ -11,6 +11,7 @@ export default defineConfig({
     // is saved on the phone, and it updates itself the next time it's online.
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false, // registered in src/main.js, which also checks for updates
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Possession Clock',
@@ -29,6 +30,10 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // A new version takes over right away instead of waiting for every
+        // copy of the app to be closed (phones rarely fully close it).
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png}']
       }
     })

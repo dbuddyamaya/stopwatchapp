@@ -58,9 +58,11 @@
 
   <section class="clock" class:running={r.running} class:decide={s.phase === 'decide'}>
     {#if s.phase === 'decide'}
-      <span class="heading">Match {s.match} · time's up, no goal</span>
-      <span class="question">Who stays on?</span>
-      <div class="controls">
+      <div class="ask">
+        <span class="q">Who stays on?</span>
+        <span class="heading">Match {s.match} · no goal</span>
+      </div>
+      <div class="stays">
         {#each r.fieldTeams as team, i}
           <button class="stay" style="--team:{team.color}; --ink:{inkOn(team.color)}" onclick={() => rotation.stays(i)}>
             {team.name}
@@ -68,40 +70,43 @@
         {/each}
       </div>
     {:else}
-      <span class="heading">Match {s.match}</span>
-      <span class="time tabular-nums" class:low={r.running && r.remaining < 30000}>{countdown(r.remaining)}</span>
-      {#if s.phase === 'ready'}
-        <div class="format">
-          <input
-            type="number"
-            inputmode="numeric"
-            min="1"
-            max="60"
-            value={s.minutes}
-            onchange={(e) => rotation.setMinutes(+e.currentTarget.value)}
-            aria-label="Minutes per match"
-          />
-          <span class="x">min or first goal</span>
-        </div>
-      {:else}
-        <span class="sub">{s.minutes} min or first goal</span>
-      {/if}
-      <div class="controls">
+      <div class="readout">
+        <span class="heading">Match {s.match}</span>
+        <span class="time tabular-nums" class:low={r.running && r.remaining < 30000}>{countdown(r.remaining)}</span>
+      </div>
+      <div class="side">
         <Button
           color={r.running ? 'alternative' : 'green'}
-          class="flex-1 whitespace-nowrap"
+          class="w-full whitespace-nowrap"
           onclick={() => rotation.primary()}
         >
           {r.action}
         </Button>
-        <Button
-          color="light"
-          class="whitespace-nowrap disabled:opacity-35"
-          disabled={!r.sessionStarted}
-          onclick={() => (confirmReset = true)}
-        >
-          New session
-        </Button>
+        <div class="meta">
+          {#if s.phase === 'ready'}
+            <label class="format">
+              <input
+                type="number"
+                inputmode="numeric"
+                min="1"
+                max="60"
+                value={s.minutes}
+                onchange={(e) => rotation.setMinutes(+e.currentTarget.value)}
+                aria-label="Minutes per match"
+              />
+              <span>min or goal</span>
+            </label>
+          {:else}
+            <span class="sub">{s.minutes} min or goal</span>
+          {/if}
+          <button
+            class="link"
+            disabled={!r.sessionStarted}
+            onclick={() => (confirmReset = true)}
+          >
+            New session
+          </button>
+        </div>
       </div>
     {/if}
   </section>
@@ -133,10 +138,13 @@
           <span class="dot" style="background:{team.color}"></span>{team.name}
         </span>
       {/each}
+      {#if s.teams.length < MAX_TEAMS}
+        <button class="chip add" onclick={() => { rotation.addTeam(); editing = true; }}>+ Add team</button>
+      {/if}
     </div>
   </section>
 
-  <section class="table" aria-label="Standings">
+  <section class="standings" aria-label="Standings">
     <table>
       <thead>
         <tr><th class="t">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th></tr>
@@ -180,7 +188,7 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     padding: 10px 12px;
     padding-top: max(10px, env(safe-area-inset-top));
     padding-bottom: max(10px, env(safe-area-inset-bottom));
@@ -189,11 +197,11 @@
   }
 
   .clock {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: 6px;
-    padding: 12px;
+    gap: 6px 16px;
+    padding: 10px 12px;
     background: var(--surface);
     border: 2px solid var(--border);
     border-radius: 16px;
@@ -202,58 +210,91 @@
     border-color: #22c55e;
   }
   .clock.decide {
+    grid-template-columns: minmax(0, 1fr);
     border-color: #f59e0b;
   }
+  .readout {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .heading {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
   }
-  .question {
-    font-size: 1.5rem;
-    font-weight: 700;
-    padding: 6px 0;
-  }
   .time {
-    font-size: clamp(3rem, 16vw, 5.5rem);
+    font-size: clamp(2.6rem, 13vw, 3.6rem);
     line-height: 1;
     font-weight: 700;
   }
   .time.low {
     color: #ef4444;
   }
-  .sub,
-  .x {
-    font-size: 0.85rem;
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 0.8rem;
     color: var(--muted);
+    white-space: nowrap;
   }
   .format {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
   }
   .format input {
-    width: 4rem;
+    width: 2.9rem;
     text-align: center;
     background: var(--bg);
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 5px 8px;
+    border-radius: 6px;
+    padding: 2px 4px;
+    font-size: 0.85rem;
   }
-  .controls {
+  .link {
+    background: none;
+    border: none;
+    padding: 2px 0;
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .link:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .ask {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .q {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .stays {
     display: flex;
     gap: 8px;
-    width: 100%;
-    max-width: 420px;
-    margin-top: 4px;
   }
   .stay {
     flex: 1;
     min-width: 0;
-    padding: 14px 10px;
+    padding: 12px 10px;
     border-radius: 12px;
     font-weight: 700;
     background: var(--team);
@@ -268,11 +309,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
+    padding: 5px 6px 5px 12px;
     border-radius: 12px;
     background: color-mix(in srgb, #22c55e 14%, var(--surface));
     border: 1px solid color-mix(in srgb, #22c55e 40%, var(--border));
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    line-height: 1.25;
   }
   .msg {
     flex: 1;
@@ -280,7 +322,7 @@
   }
   .undo-last {
     flex-shrink: 0;
-    padding: 6px 12px;
+    padding: 4px 12px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--surface);
@@ -300,8 +342,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 12px 10px 10px;
+    gap: 2px;
+    padding: 8px 8px 8px;
     background: var(--surface);
     border: 2px solid var(--border);
     border-top: 6px solid var(--team);
@@ -309,7 +351,7 @@
   }
   .name {
     max-width: 100%;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -321,8 +363,8 @@
   }
   .goal {
     width: 100%;
-    margin-top: 6px;
-    padding: 18px 10px;
+    margin-top: 4px;
+    padding: 14px 10px;
     border-radius: 12px;
     font-size: 1.15rem;
     font-weight: 700;
@@ -365,13 +407,18 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
     font-size: 0.85rem;
     white-space: nowrap;
     color: var(--muted);
+  }
+  .chip.add {
+    border-style: dashed;
+    color: var(--text);
+    cursor: pointer;
   }
   .chip.first {
     color: var(--text);
@@ -385,32 +432,35 @@
     flex-shrink: 0;
   }
 
-  .table {
+  .standings {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 4px 10px;
+    padding: 2px 10px;
   }
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
   }
   th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--muted);
     text-align: center;
-    padding: 6px 0;
-    width: 2.1rem;
+    padding: 4px 0;
+    width: 2rem;
   }
   td {
     text-align: center;
-    padding: 7px 0;
+    padding: 4px 0;
     border-top: 1px solid var(--border);
   }
   th.t,
