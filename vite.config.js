@@ -34,7 +34,22 @@ export default defineConfig({
         // copy of the app to be closed (phones rarely fully close it).
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,svg,png}']
+        globPatterns: ['**/*.{js,css,html,svg,png}'],
+        // Drill videos are big, so they aren't part of the app download.
+        // The Drills screen saves them into this cache; the worker plays them
+        // from there (with the partial "range" requests iPhones use for video).
+        globIgnores: ['drills/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/drills/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'drill-videos',
+              rangeRequests: true,
+              cacheableResponse: { statuses: [200] }
+            }
+          }
+        ]
       }
     })
   ]

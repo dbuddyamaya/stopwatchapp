@@ -5,11 +5,14 @@
   import { useGame } from './lib/game.svelte.js';
   import { useScoreboard } from './lib/scoreboard.svelte.js';
   import { useRotation } from './lib/rotation.svelte.js';
+  import { useCompetition } from './lib/competition.svelte.js';
   import { setWakeLock, resetWakeLock } from './lib/wakeLock.js';
   import NavDrawer from './components/NavDrawer.svelte';
   import PossessionView from './components/PossessionView.svelte';
   import ScoreboardView from './components/ScoreboardView.svelte';
   import RotationView from './components/RotationView.svelte';
+  import DrillsView from './components/DrillsView.svelte';
+  import CompetitionView from './components/CompetitionView.svelte';
 
   const TOOL_KEY = 'possession-clock-tool';
   const tools = [
@@ -30,12 +33,25 @@
       name: 'Winner stays',
       description: '3+ teams take turns, first goal wins',
       icon: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7" /></svg>'
+    },
+    {
+      id: 'competition',
+      name: 'Competition',
+      description: 'Timed turns, points and a table',
+      icon: '<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4" /></svg>'
+    },
+    {
+      id: 'drills',
+      name: 'Drills',
+      description: 'Drill videos and coaching notes',
+      icon: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9.5v5l4.5-2.5z" /></svg>'
     }
   ];
 
   const game = useGame();
   const board = useScoreboard();
   const rotation = useRotation();
+  const competition = useCompetition();
   let menuOpen = $state(false);
 
   let tool = $state(
@@ -63,11 +79,12 @@
   let live = $derived({
     possession: game.started && !game.stopped,
     scoreboard: board.running,
-    rotation: rotation.running
+    rotation: rotation.running,
+    competition: competition.running
   });
 
   // Keep the screen on while any tool's clock is running.
-  const keepAwake = () => live.possession || live.scoreboard || live.rotation;
+  const keepAwake = () => live.possession || live.scoreboard || live.rotation || live.competition;
   $effect(() => {
     setWakeLock(keepAwake());
   });
@@ -78,6 +95,7 @@
       game.now = Date.now();
       board.tick();
       rotation.tick();
+      competition.tick();
       resetWakeLock(keepAwake());
     };
     document.addEventListener('visibilitychange', onVisible);
@@ -89,6 +107,10 @@
   <ScoreboardView {board} onmenu={() => (menuOpen = true)} />
 {:else if tool === 'rotation'}
   <RotationView {rotation} onmenu={() => (menuOpen = true)} />
+{:else if tool === 'competition'}
+  <CompetitionView comp={competition} onmenu={() => (menuOpen = true)} />
+{:else if tool === 'drills'}
+  <DrillsView onmenu={() => (menuOpen = true)} />
 {:else}
   <PossessionView {game} onmenu={() => (menuOpen = true)} />
 {/if}

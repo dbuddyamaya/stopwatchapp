@@ -1,6 +1,6 @@
 # Possession Clock
 
-A phone app with three tools. Open the **☰ menu** (top left) to switch between them. Team names and colors are shared, and each tool keeps its clock running while you look at the other one (the menu shows a green dot next to a tool whose clock is running).
+A phone app with five tools. Open the **☰ menu** (top left) to switch between them. Team names and colors are shared, and each tool keeps its clock running while you look at the other one (the menu shows a green dot next to a tool whose clock is running).
 
 ### Possession clock
 
@@ -17,6 +17,16 @@ For a regular game where you only track goals. Pick the format before kickoff (o
 ### Winner stays
 
 For sessions with 3 or more teams taking turns. Two teams play; a match lasts a set number of minutes (default 5) **or until the first goal**. The scorer stays on and the other team goes to the back of the line; the next team in line comes on. If time runs out with no goal, the team that has been on more matches in a row leaves. When both have been on equally long (like the very first match), the app asks who stays. **Undo** takes back the last result (for a mis-tapped goal). The team button (top right) edits names and colors, adds or removes teams (3–8) and, before the first match, sets the starting order. The standings table ranks teams by wins, then goal difference. **New session** clears the standings and keeps the teams.
+
+### Competition
+
+Players take timed turns (e.g. 45 seconds) while you tap point buttons, and a table adds up everyone's points round by round. In setup: add players (names or numbers) and their order, set the turn length (minutes and seconds), choose the point buttons (e.g. +1, +3, −1) and the number of rounds, each with an optional name like "Two touch" / "One touch" that shows during the turn. After each turn the app shows who's up next (and the new round's name when a round changes) and waits for **Start**. **End turn** stops early, **Skip** passes over someone who isn't ready, the undo button takes back the last point, and points tapped right after the buzzer still count for the player who just finished. At the end, **Finish** shows the winner, or **Add a round** keeps going if there's time.
+
+### Drills
+
+A library of drill videos, in folders sorted A–Z (starting with **Through Balls**). Each drill has a video plus a short description, setup and coaching points. Videos are saved on the phone the first time Drills is opened with signal, so they play offline after that ("Saved for offline" shows under the video).
+
+To add a drill, put the video in `public/drills/<folder>/` and add an entry in `src/lib/drills.js` (there's an example at the top of that file).
 
 ### Light theme
 
@@ -47,6 +57,9 @@ src/
     ScoreboardView.svelte  Scoreboard screen
     RotationView.svelte    Winner stays screen
     TeamsEditor.svelte     its team list (names, colors, order, add / remove)
+    DrillsView.svelte      Drills screen (folders, drill list, drill page)
+    CompetitionView.svelte Competition screen (turn, clock, point buttons, table)
+    CompetitionSettings.svelte  its players, turn length, point buttons and rounds
     ConfirmDialog.svelte   yes/no dialog for Stop exercise and Reset
   lib/
     teams.svelte.js        team names and colors shared by both tools
@@ -55,6 +68,9 @@ src/
     scoreboard.svelte.js   scoreboard logic (countdown, periods, goals) and its saving
     rotation.svelte.js     winner stays logic (line of teams, draws, standings, undo) and its saving
     color.js               readable text color on team-colored buttons
+    competition.svelte.js  competition logic (turns, rounds, points, table) and its saving
+    drills.js              the drill library (folders, drills, video paths, notes)
+    offlineVideos.svelte.js  saves drill videos on the phone for offline use
     format.js              time formatting
     wakeLock.js            keeps the phone screen on while a clock runs
     theme.svelte.js        light / dark theme switch
