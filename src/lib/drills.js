@@ -27,6 +27,16 @@ const library = [
         description: 'Drill for decision making when passing to teammates close or far.',
         setup: ['8 players', '10 × 10 space', '4 cones', '2 bibs'],
         coaching: ['Use peripheral vision', 'Be quick and precise']
+      },
+      {
+        id: 'scan-and-call',
+        name: 'Scan and Call',
+        video: '/drills/through-balls/scan-and-call.mp4',
+        poster: '/drills/through-balls/scan-and-call.jpg',
+        description:
+          'Coach calls out a color; the center player scans and passes to the player standing by that cone.',
+        setup: ['5 players', '10 × 10 grid', '4 cones'],
+        coaching: ['Position body to receive and pass to the correct cone', 'Make use of both feet']
       }
     ]
   }
