@@ -118,6 +118,12 @@
           <ul>{#each drill.coaching as item}<li>{item}</li>{/each}</ul>
         </section>
       {/if}
+      {#if drill.steps?.length}
+        <section class="card">
+          <h2>How it runs</h2>
+          <ol>{#each drill.steps as item}<li>{item}</li>{/each}</ol>
+        </section>
+      {/if}
     {:else if folder}
       <!-- Drills in a folder -->
       {#if folder.drills.length === 0}
@@ -314,6 +320,14 @@
   }
   .card p {
     line-height: 1.45;
+  }
+  .card ol {
+    list-style: decimal;
+    padding-left: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: 1.4;
   }
   .card ul {
     list-style: disc;
